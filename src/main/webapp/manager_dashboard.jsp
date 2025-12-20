@@ -10,9 +10,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Manager Dashboard</title>
+    <title>Manager Dashboard - KeepTrucking</title>
+    <!-- 1. Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 2. Google Font: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 3. FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 4. YOUR CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-light">
 
@@ -38,6 +47,45 @@
                 <h4>All Shipments</h4>
                 <a href="create_shipment.jsp" class="btn btn-warning fw-bold">+ New Shipment</a>
             </div>
+            <div class="row mb-4">
+    <!-- Card 1 -->
+    <div class="col-md-3">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="fs-1 me-3"><i class="fas fa-box"></i></div>
+                <div>
+                    <h5 class="card-title mb-0">Total Shipments</h5>
+                    <h2 class="mb-0"><%= shipDao.getAllShipments().size() %></h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Card 2 -->
+    <div class="col-md-3">
+        <div class="card text-white bg-success h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="fs-1 me-3"><i class="fas fa-dollar-sign"></i></div>
+                <div>
+                    <h5 class="card-title mb-0">Revenue</h5>
+                    <h2 class="mb-0">$<%= String.format("%,.0f", shipDao.getAllShipments().stream().mapToDouble(s -> 0).sum()) %>+</h2> 
+                    <!-- (Replace sum logic with real data later) -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Card 3 -->
+    <div class="col-md-3">
+        <div class="card text-white bg-warning h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="fs-1 me-3"><i class="fas fa-truck-moving"></i></div>
+                <div>
+                    <h5 class="card-title mb-0">Active Trucks</h5>
+                    <h2 class="mb-0"><%= mgrDao.getAllTrucks().size() %></h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
             <table class="table table-bordered bg-white">
                 <thead class="table-dark"><tr><th>ID</th><th>Client</th><th>Route</th><th>Driver/Truck</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody>
