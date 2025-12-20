@@ -1,9 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package com.keeptrucking.controllers;
-
 import com.keeptrucking.dao.ManagerDAO;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -14,18 +9,14 @@ import javax.servlet.http.HttpServletResponse;
 
 @WebServlet(name = "AddClientServlet", urlPatterns = {"/AddClientServlet"})
 public class AddClientServlet extends HttpServlet {
-
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        String name = request.getParameter("name");
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String company = request.getParameter("company");
+        String contact = request.getParameter("contact");
         String phone = request.getParameter("phone");
         String email = request.getParameter("email");
         
-        ManagerDAO dao = new ManagerDAO();
-        dao.addClient(name, phone, email);
-        
+        new ManagerDAO().addClient(company, contact, phone, email);
         response.sendRedirect("manager_dashboard.jsp?tab=clients");
     }
 }

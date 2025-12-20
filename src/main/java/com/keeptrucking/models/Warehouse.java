@@ -1,20 +1,22 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.keeptrucking.models;
 
 public class Warehouse {
     private int warehouseId;
     private String name;
-    private String location;
+    private String street;
+    private String city;
+    private String zipCode;
 
-    public Warehouse(int warehouseId, String name, String location) {
+    public Warehouse(int warehouseId, String name, String street, String city, String zipCode) {
         this.warehouseId = warehouseId;
         this.name = name;
-        this.location = location;
+        this.street = street;
+        this.city = city;
+        this.zipCode = zipCode;
     }
     public int getWarehouseId() { return warehouseId; }
     public String getName() { return name; }
-    public String getLocation() { return location; }
+    public String getStreet() { return street; }
+    public String getCity() { return city; }
+    public String getZipCode() { return zipCode; }
 }

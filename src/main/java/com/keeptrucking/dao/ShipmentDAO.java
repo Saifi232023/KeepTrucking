@@ -31,14 +31,22 @@ public class ShipmentDAO {
         return generatedId;
     }
 
-    // 2. Get Available Trucks
+    // 2. Get Available Trucks (FIXED: NOW INCLUDES TYPE AND CAPACITY)
     public List<Truck> getAvailableTrucks() {
         List<Truck> list = new ArrayList<>();
         try {
             Connection con = DBConnection.getConnection();
+            // Ensure your DB table has these columns. If using SELECT *, it should work if table was altered.
             ResultSet rs = con.createStatement().executeQuery("SELECT * FROM trucks WHERE status = 'Available'");
             while(rs.next()){
-                list.add(new Truck(rs.getInt("truck_id"), rs.getString("plate_number"), rs.getString("model"), rs.getString("status")));
+                list.add(new Truck(
+                    rs.getInt("truck_id"), 
+                    rs.getString("plate_number"), 
+                    rs.getString("model"), 
+                    rs.getString("status"),
+                    rs.getString("type"),     // New Field
+                    rs.getDouble("capacity")  // New Field
+                ));
             }
         } catch (Exception e) { e.printStackTrace(); }
         return list;
@@ -106,44 +114,50 @@ public class ShipmentDAO {
         return list;
     }
 
-    // 7. Get Driver Shipments
+    // 7. Get All Driver Shipments (Active AND History)
     public List<Shipment> getShipmentsByDriver(int driverId) {
         List<Shipment> list = new ArrayList<>();
         try {
             Connection con = DBConnection.getConnection();
+            // REMOVED "AND s.status != 'Delivered'" so we get everything
             String sql = "SELECT s.shipment_id, c.company_name, u.full_name, t.plate_number, s.origin, s.destination, s.status, s.created_at " +
                          "FROM shipments s " +
                          "JOIN clients c ON s.client_id = c.client_id " +
                          "JOIN users u ON s.driver_id = u.user_id " +
                          "JOIN trucks t ON s.truck_id = t.truck_id " +
-                         "WHERE s.driver_id = ? AND s.status != 'Delivered' ORDER BY s.shipment_id DESC";
+                         "WHERE s.driver_id = ? " + 
+                         "ORDER BY s.shipment_id DESC";
+            
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, driverId);
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
-                list.add(new Shipment(rs.getInt("shipment_id"), rs.getString("company_name"), rs.getString("full_name"), rs.getString("plate_number"), rs.getString("origin"), rs.getString("destination"), rs.getString("status"), rs.getTimestamp("created_at")));
+                list.add(new Shipment(
+                    rs.getInt("shipment_id"), 
+                    rs.getString("company_name"), 
+                    rs.getString("full_name"), 
+                    rs.getString("plate_number"), 
+                    rs.getString("origin"), 
+                    rs.getString("destination"), 
+                    rs.getString("status"), 
+                    rs.getTimestamp("created_at")
+                ));
             }
         } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
-    // 8. Delete Shipment (NEW)
+
+    // 8. Delete Shipment
     public boolean deleteShipment(int shipmentId) {
         try {
             Connection con = DBConnection.getConnection();
-            
-            // Step 1: Find the Truck ID used in this shipment
             int truckId = 0;
             PreparedStatement ps1 = con.prepareStatement("SELECT truck_id FROM shipments WHERE shipment_id = ?");
             ps1.setInt(1, shipmentId);
             ResultSet rs = ps1.executeQuery();
-            if(rs.next()) {
-                truckId = rs.getInt("truck_id");
-            }
+            if(rs.next()) truckId = rs.getInt("truck_id");
 
-            // Step 2: Delete the Shipment
-            // (Note: Shipment Items will delete automatically if Foreign Key is CASCADE, otherwise this might fail)
-            // To be safe, we delete items first manually in code if DB isn't set up perfectly
             con.createStatement().executeUpdate("DELETE FROM shipment_items WHERE shipment_id = " + shipmentId);
             con.createStatement().executeUpdate("DELETE FROM expenses WHERE shipment_id = " + shipmentId);
 
@@ -151,7 +165,6 @@ public class ShipmentDAO {
             ps2.setInt(1, shipmentId);
             int rows = ps2.executeUpdate();
 
-            // Step 3: If deleted, make Truck Available again
             if(rows > 0 && truckId > 0) {
                 con.createStatement().executeUpdate("UPDATE trucks SET status = 'Available' WHERE truck_id = " + truckId);
                 return true;
@@ -159,4 +172,70 @@ public class ShipmentDAO {
         } catch (Exception e) { e.printStackTrace(); }
         return false;
     }
-}
+
+    // 9. Add Expense
+    public boolean addExpense(int shipmentId, String desc, double amount) {
+        try {
+            Connection con = DBConnection.getConnection();
+            String sql = "INSERT INTO expenses (shipment_id, description, amount) VALUES (?, ?, ?)";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, shipmentId);
+            ps.setString(2, desc);
+            ps.setDouble(3, amount);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    // 10. Get Expenses List
+    public List<Expense> getExpenses(int shipmentId) {
+        List<Expense> list = new ArrayList<>();
+        try {
+            Connection con = DBConnection.getConnection();
+            String sql = "SELECT * FROM expenses WHERE shipment_id = ?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, shipmentId);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                list.add(new Expense(rs.getInt("expense_id"), rs.getInt("shipment_id"), rs.getString("description"), rs.getDouble("amount")));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return list;
+    }
+
+    // 11. Get Shipment Details (For Invoice)
+    public Shipment getShipmentById(int id) {
+        Shipment s = null;
+        try {
+            Connection con = DBConnection.getConnection();
+            String sql = "SELECT s.shipment_id, c.company_name, u.full_name, t.plate_number, s.origin, s.destination, s.status, s.created_at " +
+                         "FROM shipments s " +
+                         "JOIN clients c ON s.client_id = c.client_id " +
+                         "JOIN users u ON s.driver_id = u.user_id " +
+                         "JOIN trucks t ON s.truck_id = t.truck_id " +
+                         "WHERE s.shipment_id = ?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                s = new Shipment(
+                    rs.getInt("shipment_id"), rs.getString("company_name"), rs.getString("full_name"), 
+                    rs.getString("plate_number"), rs.getString("origin"), rs.getString("destination"), 
+                    rs.getString("status"), rs.getTimestamp("created_at")
+                );
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return s;
+    }
+
+    // 12. Update Invoice Amount
+    public boolean updateInvoiceAmount(int shipmentId, double amount) {
+        try {
+            Connection con = DBConnection.getConnection();
+            String sql = "UPDATE shipments SET invoice_amount = ? WHERE shipment_id = ?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setDouble(1, amount);
+            ps.setInt(2, shipmentId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+    }

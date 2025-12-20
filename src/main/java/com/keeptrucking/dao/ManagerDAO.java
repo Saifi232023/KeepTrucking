@@ -8,13 +8,15 @@ import java.util.List;
 public class ManagerDAO {
     
     // --- TRUCKS ---
-    public boolean addTruck(String plate, String model) {
+    public boolean addTruck(String plate, String model, String type, double capacity) {
         try {
             Connection con = DBConnection.getConnection();
-            String sql = "INSERT INTO trucks (plate_number, model, status) VALUES (?, ?, 'Available')";
+            String sql = "INSERT INTO trucks (plate_number, model, status, type, capacity) VALUES (?, ?, 'Available', ?, ?)";
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, plate);
             ps.setString(2, model);
+            ps.setString(3, type);
+            ps.setDouble(4, capacity);
             return ps.executeUpdate() > 0;
         } catch (Exception e) { e.printStackTrace(); return false; }
     }
@@ -25,28 +27,29 @@ public class ManagerDAO {
             Connection con = DBConnection.getConnection();
             ResultSet rs = con.createStatement().executeQuery("SELECT * FROM trucks");
             while(rs.next()){
-                list.add(new Truck(rs.getInt("truck_id"), rs.getString("plate_number"), rs.getString("model"), rs.getString("status")));
+                list.add(new Truck(
+                    rs.getInt("truck_id"), rs.getString("plate_number"), rs.getString("model"), 
+                    rs.getString("status"), rs.getString("type"), rs.getDouble("capacity")
+                ));
             }
         } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
-    
     public boolean deleteTruck(int id) {
-        try {
-            Connection con = DBConnection.getConnection();
-            return con.createStatement().executeUpdate("DELETE FROM trucks WHERE truck_id=" + id) > 0;
-        } catch (Exception e) { return false; }
+        try { return DBConnection.getConnection().createStatement().executeUpdate("DELETE FROM trucks WHERE truck_id=" + id) > 0; } 
+        catch (Exception e) { return false; }
     }
 
     // --- CLIENTS ---
-    public boolean addClient(String name, String phone, String email) {
+    public boolean addClient(String company, String contact, String phone, String email) {
         try {
             Connection con = DBConnection.getConnection();
-            String sql = "INSERT INTO clients (company_name, phone, email) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO clients (company_name, contact_name, phone, email) VALUES (?, ?, ?, ?)";
             PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, name);
-            ps.setString(2, phone);
-            ps.setString(3, email);
+            ps.setString(1, company);
+            ps.setString(2, contact);
+            ps.setString(3, phone);
+            ps.setString(4, email);
             return ps.executeUpdate() > 0;
         } catch (Exception e) { e.printStackTrace(); return false; }
     }
@@ -57,27 +60,26 @@ public class ManagerDAO {
             Connection con = DBConnection.getConnection();
             ResultSet rs = con.createStatement().executeQuery("SELECT * FROM clients");
             while(rs.next()){
-                list.add(new Client(rs.getInt("client_id"), rs.getString("company_name"), rs.getString("phone"), rs.getString("email")));
+                list.add(new Client(rs.getInt("client_id"), rs.getString("company_name"), rs.getString("contact_name"), rs.getString("phone"), rs.getString("email")));
             }
         } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
-
     public boolean deleteClient(int id) {
-        try {
-            Connection con = DBConnection.getConnection();
-            return con.createStatement().executeUpdate("DELETE FROM clients WHERE client_id=" + id) > 0;
-        } catch (Exception e) { return false; }
+        try { return DBConnection.getConnection().createStatement().executeUpdate("DELETE FROM clients WHERE client_id=" + id) > 0; } 
+        catch (Exception e) { return false; }
     }
 
     // --- WAREHOUSES ---
-    public boolean addWarehouse(String name, String location) {
+    public boolean addWarehouse(String name, String street, String city, String zip) {
         try {
             Connection con = DBConnection.getConnection();
-            String sql = "INSERT INTO warehouses (name, location) VALUES (?, ?)";
+            String sql = "INSERT INTO warehouses (name, street, city, zip_code) VALUES (?, ?, ?, ?)";
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, name);
-            ps.setString(2, location);
+            ps.setString(2, street);
+            ps.setString(3, city);
+            ps.setString(4, zip);
             return ps.executeUpdate() > 0;
         } catch (Exception e) { e.printStackTrace(); return false; }
     }
@@ -88,16 +90,13 @@ public class ManagerDAO {
             Connection con = DBConnection.getConnection();
             ResultSet rs = con.createStatement().executeQuery("SELECT * FROM warehouses");
             while(rs.next()){
-                list.add(new Warehouse(rs.getInt("warehouse_id"), rs.getString("name"), rs.getString("location")));
+                list.add(new Warehouse(rs.getInt("warehouse_id"), rs.getString("name"), rs.getString("street"), rs.getString("city"), rs.getString("zip_code")));
             }
         } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
-
     public boolean deleteWarehouse(int id) {
-        try {
-            Connection con = DBConnection.getConnection();
-            return con.createStatement().executeUpdate("DELETE FROM warehouses WHERE warehouse_id=" + id) > 0;
-        } catch (Exception e) { return false; }
+        try { return DBConnection.getConnection().createStatement().executeUpdate("DELETE FROM warehouses WHERE warehouse_id=" + id) > 0; } 
+        catch (Exception e) { return false; }
     }
 }
