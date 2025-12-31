@@ -34,7 +34,7 @@
 
 <nav class="navbar navbar-dark bg-dark mb-4">
     <div class="container">
-        <a class="navbar-brand" href="#">Driver Portal</a>
+        <a class="navbar-brand" href="#">Portal of Driver</a>
         <span class="navbar-text text-white">Driver: <%= currentUser.getFullName() %></span>
         <a href="login.jsp" class="btn btn-sm btn-danger ms-2">Logout</a>
     </div>
